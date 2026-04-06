@@ -23,14 +23,23 @@ def get_system_info():
     cores_pattern = (
         r"Total Number of Cores: (\d+) \((\d+) performance and (\d+) efficiency\)"
     )
+    super_cores_pattern = (
+        r"Total Number of Cores: (\d+) \((\d+) Super and (\d+) Performance\)"
+    )
     match = re.search(cores_pattern, hardware_data)
-    if match:
+    super_match = re.search(super_cores_pattern, hardware_data)
+    if super_match:
+        total_cores, super_cores, performance_cores = super_match.groups()
+        efficiency_cores = None
+    elif match:
         total_cores, performance_cores, efficiency_cores = match.groups()
+        super_cores = None
+    else:
+        total_cores = performance_cores = efficiency_cores = super_cores = None
 
     gpu_cores_pattern = r"Total Number of Cores: (\d+)"
     gpu_match = re.search(gpu_cores_pattern, display_data)
-    if gpu_match:
-        gpu_cores = gpu_match.group(1)
+    gpu_cores = gpu_match.group(1) if gpu_match else "Unknown"
 
     ram_pattern = r"Memory: (.+)"
     ram_match = re.search(ram_pattern, hardware_data)
@@ -38,7 +47,10 @@ def get_system_info():
     ram = ram.split(" ")[0]
 
     chipset_model = chipset_model.split("Apple")[-1]
-    formatted_output = f"{chipset_model} ({efficiency_cores}E+{performance_cores}P+{gpu_cores}GPU+{ram}GB)"
+    if super_cores:
+        formatted_output = f"{chipset_model} ({super_cores}S+{performance_cores}P+{gpu_cores}GPU+{ram}GB)"
+    else:
+        formatted_output = f"{chipset_model} ({efficiency_cores}E+{performance_cores}P+{gpu_cores}GPU+{ram}GB)"
     return formatted_output
 
 
